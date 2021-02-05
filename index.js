@@ -1,7 +1,8 @@
 const connection = require('./config');
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 5000;
+const cors = require('cors');
 
 connection.connect(function (err) {
   if (err) {
@@ -12,33 +13,34 @@ connection.connect(function (err) {
   console.log('connected as id ' + connection.threadId);
 });
 
+app.use(cors());
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Here are the albums');
+  res.send('Here are the emoji definitions');
 });
 
-//ALBUMS
-//see albums
-app.get('/api/albums', (req, res) => {
-  connection.query('SELECT * from album', (err, results) => {
+//see emoji
+app.get('/api/emoji', (req, res) => {
+  connection.query('SELECT * from emoji', (err, results) => {
     if (err) {
-      res.status(500).send('Error retrieving data');
+      res.status(500).send('No data');
     } else {
       res.status(200).json(results);
     }
   });
 });
 
-//album by id
-app.get('/api/albums/:id', (req, res) => {
+//emoji by id
+app.get('/api/emoji/:id', (req, res) => {
   connection.query(
-    'SELECT * from album WHERE id=?',
+    'SELECT * from emoji WHERE id=?',
     [req.params.id],
     (err, results) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error retrieving data');
+        res.status(500).send('No data');
       } else {
         res.status(200).json(results);
       }
@@ -46,16 +48,16 @@ app.get('/api/albums/:id', (req, res) => {
   );
 });
 
-//create album
-app.post('/api/albums', (req, res) => {
+//create emoji
+app.post('/api/emoji', (req, res) => {
   const { title, genre, picture, artist } = req.body;
   connection.query(
-    'INSERT INTO album(title, genre, picture, artist) VALUES(?, ?, ?, ?)',
+    'INSERT INTO emoji(emoji, title, description) VALUES(?, ?, ?)',
     [title, genre, picture, artist],
     (err, results) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error saving an album');
+        res.status(500).send('Error saving an emoji');
       } else {
         res.status(200).send('Successfully saved');
       }
@@ -63,95 +65,28 @@ app.post('/api/albums', (req, res) => {
   );
 });
 
-//edit album
-app.put('/api/albums/:id', (req, res) => {
-  const albumId = req.params.id;
-  const newAlbum = req.body;
+//edit emoji
+app.put('/api/emoji/:id', (req, res) => {
+  const emojiId = req.params.id;
+  const newEmoji = req.body;
   connection.query(
-    'UPDATE album SET ? WHERE id = ?',
-    [newAlbum, albumId],
+    'UPDATE emoji SET ? WHERE id = ?',
+    [newEmoji, emojiId],
     (err, results) => {
       if (err) {
         console.log(err);
-        res.status(500).send('Error updating an album');
+        res.status(500).send('Error updating emoji');
       } else {
-        res.status(200).send('Album updated successfully 🎉');
+        res.status(200).send('Emoji updated successfully 🎉');
       }
     }
   );
 });
 
-//delete an album
-app.delete('/api/albums/:id', (req, res) => {
-  const albumId = req.params.id;
-  connection.query('DELETE FROM album WHERE id = ?', [albumId], (err) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send('Not able to delete');
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
-
-//TRACKSSS
-// create song and assign to album
-
-app.post('/api/albums/:id/tracks', (req, res) => {
-  const { title, youtube_url, album_id } = req.body;
-  connection.query(
-    'INSERT INTO track(title, youtube_url, album_id) VALUES(?, ?, ?)',
-    [title, youtube_url, album_id],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send('Error saving a song');
-      } else {
-        res.status(200).send('Successfully saved');
-      }
-    }
-  );
-});
-
-// list songs from an album
-app.get('/api/albums/:id/tracks', (req, res) => {
-  connection.query(
-    'SELECT * from track WHERE album_id=?',
-    [req.params.id],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send('Error retrieving data');
-      } else {
-        res.status(200).json(results);
-      }
-    }
-  );
-});
-
-// edit song from an album -- NE MARCHE PASSSS :@@@@@@
-app.put('/api/albums/:id/tracks/:id', (req, res) => {
-  const trackId = req.params.id;
-  const newTrack = req.body;
-  const albumId = req.params.album_id;
-  connection.query(
-    'UPDATE track SET ? WHERE album_id = ? AND WHERE id = ?',
-    [newTrack, trackId, albumId],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        res.status(500).send('Error updating the song');
-      } else {
-        res.status(200).send('song modified YES');
-      }
-    }
-  );
-});
-
-//delete song
-app.delete('/api/tracks/:id', (req, res) => {
-  const trackId = req.params.id;
-  connection.query('DELETE FROM track WHERE id = ?', [trackId], (err) => {
+//delete an emoji
+app.delete('/api/emoji/:id', (req, res) => {
+  const emojiId = req.params.id;
+  connection.query('DELETE FROM emoji WHERE id = ?', [emojiId], (err) => {
     if (err) {
       console.log(err);
       res.status(500).send('Not able to delete');
